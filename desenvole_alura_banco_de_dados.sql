@@ -1,81 +1,102 @@
+-- Criar todas as tabelas
+DROP TABLE IF EXISTS vendas_estoque;
+DROP TABLE IF EXISTS vendas;
+DROP TABLE IF EXISTS clientes;
+DROP TABLE IF EXISTS funcionarios;
+DROP TABLE IF EXISTS estoque;
+DROP TABLE IF EXISTS loja;
+DROP TABLE IF EXISTS endereco;
+DROP TABLE IF EXISTS produto;
+-- Tabela de produtos aonde teremos todas a informações dos produtos criados.
+
 CREATE TABLE produto (
-    Produto_ID BIGINT(22) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    Produto_ID BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     Produto_nome VARCHAR(45) NOT NULL,
     Tipo VARCHAR(45) NOT NULL,
     Valor_unitario DECIMAL(5, 2),
     Atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-
+-- Tabela de endereços que serve para os clientes, funcionários e lojas.
 CREATE TABLE endereco (
-    Endereco_ID BIGINT(22) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    Endereco_ID BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     endereco VARCHAR(255) NOT NULL,
     endereco2 VARCHAR(255),
     CEP VARCHAR(10),
     Atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Tabela de Lojas para ter todas as lojas disponiveis no banco e seus endereços.
 CREATE TABLE loja (
-    loja_id BIGINT(22) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    endereco_id BIGINT(22) UNSIGNED,
+    loja_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    endereco_id BIGINT UNSIGNED,
     FOREIGN KEY (endereco_id) REFERENCES endereco(Endereco_ID),
     Atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Tabela estoque para ter controle da quantidade de produtos e quanto cada loja possui.
 CREATE TABLE estoque (
-    estoque_id BIGINT(22) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    produto_id BIGINT(22) UNSIGNED,
-    loja_id BIGINT(22) UNSIGNED,
+    estoque_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    produto_id BIGINT UNSIGNED,
+    loja_id BIGINT UNSIGNED,
     FOREIGN KEY (produto_id) REFERENCES produto(Produto_ID),
     FOREIGN KEY (loja_id) REFERENCES loja(loja_id),
     quantidade INT,
+    valor_unitario DECIMAL(10, 2),
     Atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Tabela funcionarios para ter o registro deles, qual loja cada um está e com um contador de vendas para saber o desempenho de cada um.
 CREATE TABLE funcionarios (
-    funcionario_id BIGINT(22) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(45),
-    sobrenome VARCHAR(45),
+    funcionario_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(45) NOT NULL,
+    sobrenome VARCHAR(45) NOT NULL,
     email VARCHAR(100),
-    data_efetivacao DATE,
-    loja_id BIGINT(22) UNSIGNED,
+    data_efetivacao DATE NOT NULL,
+    loja_id BIGINT UNSIGNED NOT NULL,
     FOREIGN KEY (loja_id) REFERENCES loja(loja_id),
+    quantidade_vendas INT,
     Atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Tabela de cliente para ter controle de como estão esse clientes em qual loja foi realizado o cadastro e também ter o registro de pontos de cada um.
 CREATE TABLE clientes (
-    cliente_id BIGINT(22) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    cliente_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100),
     sobrenome VARCHAR(100),
     email VARCHAR(255),
     data_nascimento DATE,
     telefone VARCHAR(20),
     sexo CHAR(1),
-    loja_id BIGINT(22) UNSIGNED,
-    endereco_id BIGINT(22) UNSIGNED,
+    loja_id BIGINT UNSIGNED,
+    endereco_id BIGINT UNSIGNED,
     FOREIGN KEY (loja_id) REFERENCES loja(loja_id),
     FOREIGN KEY (endereco_id) REFERENCES endereco(Endereco_ID),
+    pontos INT DEFAULT 0,
     Atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE vendas_estoque (
-    venda_id BIGINT(22) UNSIGNED,
-    estoque_id BIGINT(22) UNSIGNED,
-    quantidade INT,
-    FOREIGN KEY (venda_id) REFERENCES vendas(venda_id),
-    FOREIGN KEY (estoque_id) REFERENCES estoque(estoque_id)
-);
+-- Tabela de Vendas para registrar todas as vendas e vendas_estoque para ter a retirada do estoque de cada produto
 
 CREATE TABLE vendas (
-    venda_id BIGINT(22) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    funcionario_id BIGINT(22) UNSIGNED,
-    cliente_id BIGINT(22) UNSIGNED,
+    venda_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    funcionario_id BIGINT UNSIGNED,
+    cliente_id BIGINT UNSIGNED,
     data_venda TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     valor_total DECIMAL(10, 2),
     FOREIGN KEY (funcionario_id) REFERENCES funcionarios(funcionario_id),
     FOREIGN KEY (cliente_id) REFERENCES clientes(cliente_id)
 );
 
+CREATE TABLE vendas_estoque (
+    venda_id BIGINT UNSIGNED,
+    estoque_id BIGINT UNSIGNED,
+    quantidade INT,
+    FOREIGN KEY (venda_id) REFERENCES vendas(venda_id),
+    FOREIGN KEY (estoque_id) REFERENCES estoque(estoque_id)
+);
+
+-- Inserção de dados aleatorios
 
 INSERT INTO produto (Produto_nome, Tipo, Valor_unitario)
 VALUES 
@@ -151,20 +172,17 @@ VALUES
     (21), -- Loja 3: Endereço na Avenida V, Apt 122
     (31); -- Loja 4: Endereço na Rua Y, Apt 125
     
+INSERT INTO estoque (produto_id, loja_id, quantidade)
+SELECT Produto_ID, 1, FLOOR(RAND() * 50) + 1 FROM produto ORDER BY RAND() LIMIT 100;
 
 INSERT INTO estoque (produto_id, loja_id, quantidade)
-SELECT Produto_ID, 1, FLOOR(RAND() * 50) + 1 FROM produto ORDER BY RAND() LIMIT 15;
+SELECT Produto_ID, 2, FLOOR(RAND() * 50) + 1 FROM produto ORDER BY RAND() LIMIT 100;
 
 INSERT INTO estoque (produto_id, loja_id, quantidade)
-SELECT Produto_ID, 2, FLOOR(RAND() * 50) + 1 FROM produto ORDER BY RAND() LIMIT 15;
+SELECT Produto_ID, 3, FLOOR(RAND() * 50) + 1 FROM produto ORDER BY RAND() LIMIT 100;
 
 INSERT INTO estoque (produto_id, loja_id, quantidade)
-SELECT Produto_ID, 3, FLOOR(RAND() * 50) + 1 FROM produto ORDER BY RAND() LIMIT 15;
-
-INSERT INTO estoque (produto_id, loja_id, quantidade)
-SELECT Produto_ID, 4, FLOOR(RAND() * 50) + 1 FROM produto ORDER BY RAND() LIMIT 15;
-
-SELECT * FROM estoque;
+SELECT Produto_ID, 4, FLOOR(RAND() * 50) + 1 FROM produto ORDER BY RAND() LIMIT 100;
 
 INSERT INTO clientes (nome, sobrenome, email, data_nascimento, telefone, sexo, loja_id, endereco_id)
 VALUES 
@@ -198,50 +216,89 @@ VALUES
     ('Rodrigo', 'Carvalho', 'rodrigo.carvalho@example.com', '2022-01-30', 4),
     ('Tatiane', 'Lima', 'tatiane.lima@example.com', '2022-02-05', 4);
     
-ALTER TABLE estoque ADD COLUMN valor_unitario DECIMAL(10, 2);
     
 UPDATE estoque e
 	INNER JOIN produto p ON e.produto_id = p.Produto_ID
 	SET e.valor_unitario = p.Valor_unitario;
     
-SELECT * FROM vendas_estoque;
     
-INSERT INTO vendas (funcionario_id, cliente_id, valor_total)
-SELECT 
-    F.funcionario_id,
-    C.cliente_id,
-    ROUND(RAND() * 1000, 2) AS valor_total 
-FROM 
-    (SELECT funcionario_id FROM funcionarios ORDER BY RAND() LIMIT 200) AS F, 
-    (SELECT cliente_id FROM clientes ORDER BY RAND() LIMIT 200) AS C; 
 
-INSERT INTO vendas_estoque (venda_id, estoque_id, quantidade)
-SELECT 
-    v.venda_id,
-    e.estoque_id,
-    FLOOR(RAND() * 5) + 1 AS quantidade 
-FROM 
-    (SELECT venda_id FROM vendas ORDER BY RAND() LIMIT 200) AS v, 
-    (SELECT estoque_id FROM estoque ORDER BY RAND() LIMIT 200) AS e;
-    
-ALTER TABLE funcionarios
-ADD COLUMN quantidade_vendas INT;
+SELECT * FROM funcionarios;
 
 
-UPDATE funcionarios AS f
-SET f.quantidade_vendas = (
-    SELECT COUNT(v.venda_id)
-    FROM vendas AS v
-    WHERE v.funcionario_id = f.funcionario_id
-);
 
-ALTER TABLE clientes
-ADD COLUMN pontos INT DEFAULT 0;
+DELIMITER //
 
+CREATE PROCEDURE registrar_venda(
+    IN p_funcionario_id BIGINT, 
+    IN p_cliente_id BIGINT, 
+    IN p_produto_id BIGINT, 
+    IN p_loja_id BIGINT, 
+    IN p_quantidade INT, 
+    IN p_usar_pontos BOOLEAN
+)
+BEGIN
+    DECLARE v_estoque_atual INT;
+    DECLARE v_valor_unitario DECIMAL(10, 2);
+    DECLARE v_valor_total DECIMAL(10, 2);
+    DECLARE v_pontos_cliente INT;
+    DECLARE v_desconto DECIMAL(10, 2);
+    DECLARE v_pontos_usados INT;
+    DECLARE v_estoque_id BIGINT;
 
-UPDATE clientes AS c
-SET c.pontos = (
-    SELECT FLOOR(SUM(v.valor_total) / 300) * 10
-    FROM vendas AS v
-    WHERE v.cliente_id = c.cliente_id
-);
+    -- Verificar a quantidade disponível no estoque
+    SELECT quantidade, valor_unitario, estoque_id INTO v_estoque_atual, v_valor_unitario, v_estoque_id
+    FROM estoque 
+    WHERE produto_id = p_produto_id AND loja_id = p_loja_id;
+
+    IF v_estoque_atual >= p_quantidade THEN
+        -- Calcular o valor total da venda
+        SET v_valor_total = p_quantidade * v_valor_unitario;
+
+        -- Verificar pontos do cliente
+        SELECT pontos INTO v_pontos_cliente FROM clientes WHERE cliente_id = p_cliente_id;
+
+        -- Aplicar desconto se o cliente quiser usar pontos
+        IF p_usar_pontos AND v_pontos_cliente >= 50 THEN
+            SET v_pontos_usados = FLOOR(v_pontos_cliente / 50) * 50;
+            SET v_desconto = (v_pontos_usados / 50) * 0.05 * v_valor_total;
+            SET v_valor_total = v_valor_total - v_desconto;
+            SET v_pontos_cliente = v_pontos_cliente - v_pontos_usados;
+        ELSE
+            SET v_desconto = 0;
+            SET v_pontos_usados = 0;
+        END IF;
+
+        -- Registrar a venda
+        INSERT INTO vendas (funcionario_id, cliente_id, data_venda, valor_total) 
+        VALUES (p_funcionario_id, p_cliente_id, NOW(), v_valor_total);
+
+        -- Obter o ID da venda recém-criada
+        SET @venda_id = LAST_INSERT_ID();
+
+        -- Inserir na tabela vendas_estoque
+        INSERT INTO vendas_estoque (venda_id, estoque_id, quantidade) 
+        VALUES (@venda_id, v_estoque_id, p_quantidade);
+
+        -- Decrementar a quantidade do estoque
+        UPDATE estoque 
+        SET quantidade = quantidade - p_quantidade 
+        WHERE estoque_id = v_estoque_id;
+
+        -- Atualizar os pontos do cliente
+        UPDATE clientes 
+        SET pontos = v_pontos_cliente + FLOOR(v_valor_total / 300) * 10 
+        WHERE cliente_id = p_cliente_id;
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Estoque insuficiente para a venda';
+    END IF;
+END //
+
+DELIMITER ;
+
+SELECT * FROM estoque;
+
+CALL registrar_venda(1, 1, 1, 1, 3, FALSE);
+
+SELECT * FROM vendas;
+
